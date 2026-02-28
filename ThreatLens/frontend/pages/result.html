@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ThreatLens | Scan Result</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/result.css">
+</head>
+
+<body class="dark">
+
+    <header class="header">
+        <div class="brand">
+            <img src="../assets/logo.png" class="logo">
+            <div class="brand-text">
+                <h1>ThreatLens</h1><span>One lens. Total threat visibility.</span></div>
+        </div>
+        <div class="header-actions">
+            <button id="themeToggle" title="Toggle Theme">☀️</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="profile">
+                <div class="avatar">👤</div>
+                <p id="username">User</p>
+            </div>
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="history.html">Scan History</a>
+                <a href="reports.html">Reports</a>
+                <a href="profile.html">Profile</a>
+                <a href="settings.html">Settings</a>
+            </nav>
+        </aside>
+
+        <main class="content result-page">
+
+            <!-- VERDICT BANNER -->
+            <div id="verdictBanner" class="verdict-banner">
+                <div class="verdict-icon" id="verdictIcon">?</div>
+                <div class="verdict-info">
+                    <h2 id="verdictText">Scanning...</h2>
+                    <p id="verdictSub">—</p>
+                </div>
+                <div class="threat-meter">
+                    <div class="threat-label">Threat Score</div>
+                    <div class="threat-score" id="threatScore">0</div>
+                    <div class="threat-bar-wrap">
+                        <div class="threat-bar" id="threatBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILE INFO + HASHES -->
+            <div class="result-grid">
+                <div class="result-card">
+                    <h3>📄 File Information</h3>
+                    <table class="info-table">
+                        <tr>
+                            <td>Filename</td>
+                            <td id="rFilename">—</td>
+                        </tr>
+                        <tr>
+                            <td>File Type</td>
+                            <td id="rFileType">—</td>
+                        </tr>
+                        <tr>
+                            <td>File Size</td>
+                            <td id="rFileSize">—</td>
+                        </tr>
+                        <tr>
+                            <td>Entropy</td>
+                            <td id="rEntropy">—</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="result-card">
+                    <h3>🔐 Cryptographic Hashes</h3>
+                    <table class="info-table">
+                        <tr>
+                            <td>MD5</td>
+                            <td id="rMd5" class="mono">—</td>
+                        </tr>
+                        <tr>
+                            <td>SHA-1</td>
+                            <td id="rSha1" class="mono">—</td>
+                        </tr>
+                        <tr>
+                            <td>SHA-256</td>
+                            <td id="rSha256" class="mono">—</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ENGINE SUMMARY CHIPS -->
+            <div class="result-card engines-card">
+                <h3>🔬 Scan Engines</h3>
+                <div class="engines-grid" id="enginesGrid"></div>
+            </div>
+
+            <!-- VIRUSTOTAL VENDOR TABLE -->
+            <div class="result-card" id="vtCard" style="display:none">
+                <div class="vt-header">
+                    <h3> Security Vendor Analysis</h3>
+                    <div class="vt-stats" id="vtStats"></div>
+                </div>
+                <div class="vt-filter-bar">
+                    <button class="vt-filter-btn active" onclick="filterVendors('all',this)">All</button>
+                    <button class="vt-filter-btn" onclick="filterVendors('malicious',this)">🔴 Malicious</button>
+                    <button class="vt-filter-btn" onclick="filterVendors('suspicious',this)">🟠 Suspicious</button>
+                    <button class="vt-filter-btn" onclick="filterVendors('undetected',this)">🟢 Undetected</button>
+                    <input type="text" id="vtSearch" placeholder="Search vendor..." oninput="searchVendors(this.value)">
+                </div>
+                <div class="vt-table-wrap">
+                    <table class="vt-table">
+                        <thead>
+                            <tr>
+                                <th>Security Vendor</th>
+                                <th>Result</th>
+                                <th>Detection</th>
+                                <th>Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vtTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="vtTags" class="vt-tags"></div>
+            </div>
+
+            <!-- HYBRID ANALYSIS SANDBOX -->
+            <div class="result-card" id="haCard" style="display:none">
+                <div class="vt-header">
+                    <h3> Hybrid Analysis — Sandbox Behavior</h3>
+                    <div id="haVerdict" class="ha-verdict-chip"></div>
+                </div>
+
+                <div class="ha-grid">
+                    <!-- Network -->
+                    <div class="ha-section" id="haNetworkSection" style="display:none">
+                        <div class="ha-section-title">🌐 Network Activity</div>
+                        <div id="haNetwork" class="ha-list"></div>
+                    </div>
+                    <!-- Files -->
+                    <div class="ha-section" id="haFilesSection" style="display:none">
+                        <div class="ha-section-title">📁 File Activity</div>
+                        <div id="haFiles" class="ha-list"></div>
+                    </div>
+                    <!-- Processes -->
+                    <div class="ha-section" id="haProcessSection" style="display:none">
+                        <div class="ha-section-title">⚙️ Processes Spawned</div>
+                        <div id="haProcesses" class="ha-list"></div>
+                    </div>
+                </div>
+
+                <!-- Behavioral Signatures -->
+                <div id="haSignaturesSection" style="display:none; margin-top:16px">
+                    <div class="ha-section-title" style="margin-bottom:10px">🚨 Behavioral Signatures</div>
+                    <div id="haSignatures"></div>
+                </div>
+
+                <!-- MITRE ATT&CK -->
+                <div id="haMitreSection" style="display:none; margin-top:16px">
+                    <div class="ha-section-title" style="margin-bottom:8px">🎯 MITRE ATT&CK Techniques</div>
+                    <div id="haMitre" class="vt-tags"></div>
+                </div>
+            </div>
+
+            <!-- ALIENVAULT OTX -->
+            <div class="result-card" id="otxCard" style="display:none">
+                <div class="vt-header">
+                    <h3> AlienVault OTX — Threat Intelligence</h3>
+                    <div id="otxStats" class="vt-stats"></div>
+                </div>
+
+                <!-- Tags & Malware Families -->
+                <div id="otxMeta" style="margin-bottom:14px"></div>
+
+                <!-- Pulses Table -->
+                <div id="otxPulsesSection" style="display:none">
+                    <div class="ha-section-title" style="margin-bottom:10px">📡 Threat Intelligence Pulses</div>
+                    <div class="vt-table-wrap">
+                        <table class="vt-table">
+                            <thead>
+                                <tr>
+                                    <th>Pulse Name</th>
+                                    <th>Author</th>
+                                    <th>Tags</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="otxPulsesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETECTION FLAGS -->
+            <div class="result-card">
+                <h3>⚠️ Detection Flags</h3>
+                <div id="flagsList" class="flags-list"><span class="no-flags">No threats detected</span></div>
+            </div>
+
+            <!-- YARA MATCHES -->
+            <div class="result-card" id="yaraCard" style="display:none">
+                <h3> YARA Rule Matches</h3>
+                <div id="yaraMatches" class="yara-matches"></div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="result-actions">
+                <a href="index.html" class="primary-btn">← Scan Another File</a>
+                <button onclick="window.print()" class="secondary-btn">🖨️ Export Report</button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        /* ── Session & Theme ── */
+        document.getElementById("username").innerText = sessionStorage.getItem("userName") || "User";
+        document.getElementById("logoutBtn").onclick = () => {
+            sessionStorage.clear();
+            location.href = "login.html";
+        };
+        const toggleBtn = document.getElementById("themeToggle");
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme) {
+            document.body.className = savedTheme;
+            toggleBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+        }
+        toggleBtn.onclick = () => {
+            const isDark = document.body.classList.contains("dark");
+            document.body.className = isDark ? "light" : "dark";
+            toggleBtn.textContent = isDark ? "🌙" : "☀️";
+            localStorage.setItem("theme", isDark ? "light" : "dark");
+        };
+
+        /* ── Constants ── */
+        const VERDICT_COLOR = {
+            "Malicious": "#ff4444",
+            "Suspicious": "#ff8800",
+            "Potentially Unwanted": "#f0c000",
+            "Clean": "#00c853"
+        };
+        const VERDICT_ICON = {
+            "Malicious": "☠️",
+            "Suspicious": "⚠️",
+            "Potentially Unwanted": "🔶",
+            "Clean": "✅"
+        };
+        const CAT_COLOR = {
+            "malicious": "#ff4444",
+            "suspicious": "#ff8800",
+            "undetected": "#00c853",
+            "type-unsupported": "#666",
+            "timeout": "#888"
+        };
+        const CAT_LABEL = {
+            "malicious": "🔴 Malicious",
+            "suspicious": "🟠 Suspicious",
+            "undetected": "🟢 Undetected",
+            "type-unsupported": "⬜ Unsupported",
+            "timeout": "⏱️ Timeout"
+        };
+        let allVendorRows = [];
+
+        /* ── Load ── */
+        const raw = sessionStorage.getItem("scanResult");
+        if (!raw) {
+            document.querySelector(".result-page").innerHTML = '<div style="padding:40px;text-align:center"><h2>No scan result found.</h2><a href="index.html">← Go back</a></div>';
+        } else {
+            renderResult(JSON.parse(raw));
+        }
+
+        function renderResult(d) {
+            const verdict = d.verdict || "Clean";
+            const color = VERDICT_COLOR[verdict] || "#888";
+            const engines = d.engines || {};
+
+            /* Banner */
+            document.getElementById("verdictBanner").style.borderLeftColor = color;
+            document.getElementById("verdictIcon").textContent = VERDICT_ICON[verdict] || "❓";
+            document.getElementById("verdictText").textContent = verdict;
+            document.getElementById("verdictText").style.color = color;
+            document.getElementById("verdictSub").textContent = `Risk Level: ${d.risk || "Unknown"} · File: ${d.filename || "Unknown"}`;
+
+            /* Threat score */
+            const score = d.threat_score || 0;
+            document.getElementById("threatScore").textContent = score;
+            document.getElementById("threatScore").style.color = color;
+            const bar = document.getElementById("threatBar");
+            bar.style.background = color;
+            setTimeout(() => {
+                bar.style.width = score + "%";
+            }, 100);
+
+            /* File info */
+            document.getElementById("rFilename").textContent = d.filename || "—";
+            document.getElementById("rFileType").textContent = d.file_type || "—";
+            document.getElementById("rFileSize").textContent = fmtSize(d.file_size);
+            const ent = d.entropy;
+            document.getElementById("rEntropy").innerHTML = ent != null ?
+                `${ent} / 8.0 ${ent > 7 ? '<span style="color:#ff8800">⚠️ High</span>' : ''}` : "—";
+
+            /* Hashes */
+            const h = d.hashes || {};
+            document.getElementById("rMd5").textContent = h.md5 || "—";
+            document.getElementById("rSha1").textContent = h.sha1 || "—";
+            document.getElementById("rSha256").textContent = h.sha256 || "—";
+
+            /* Engine chips — 5 engines */
+            const engineDefs = [{
+                key: "static_analysis",
+                label: "Static Analysis",
+                icon: ""
+            }, {
+                key: "yara",
+                label: "YARA Rules",
+                icon: ""
+            }, {
+                key: "virustotal",
+                label: "VirusTotal",
+                icon: ""
+            }, {
+                key: "otx",
+                label: "AlienVault OTX",
+                icon: ""
+            }, {
+                key: "hybrid_analysis",
+                label: "Hybrid Analysis",
+                icon: ""
+            }, ];
+            document.getElementById("enginesGrid").innerHTML = engineDefs.map(({
+                key,
+                label,
+                icon
+            }) => {
+                const eng = engines[key] || {};
+                const ev = eng.verdict || eng.status || "N/A";
+                const ec = VERDICT_COLOR[ev] || (["unavailable", "not_found", "clean", "pending"].includes(ev) ? "#555" : "#888");
+                let sub = "";
+                if (key === "virustotal" && eng.detections) sub = `<small style="color:#aaa">${eng.detections} detections</small>`;
+                if (key === "otx" && eng.pulse_count != null) sub = `<small style="color:#aaa">${eng.pulse_count} pulse(s)</small>`;
+                if (key === "hybrid_analysis" && eng.environment) sub = `<small style="color:#aaa">${eng.environment}</small>`;
+                if (["unavailable", "not_found"].includes(eng.status)) sub = `<small style="color:#555">Not configured</small>`;
+                if (eng.status === "pending") sub = `<small style="color:#888">⏳ Pending</small>`;
+                return `<div class="engine-chip" style="border-color:${ec}">
+            <span class="engine-icon">${icon}</span>
+            <span class="engine-name">${label}</span>
+            <span class="engine-verdict" style="color:${ec}">${ev}</span>
+            ${sub}
+        </div>`;
+            }).join("");
+
+            /* VirusTotal vendor table */
+            const vt = engines.virustotal || {};
+            if (vt.vendor_table && vt.vendor_table.length > 0) renderVTTable(vt);
+            else if (vt.status === "pending") {
+                show("vtCard");
+                document.getElementById("vtCard").innerHTML += `<p style="color:#888;text-align:center;padding:20px">⏳ VT analysis pending — rescan in ~1 minute</p>`;
+            }
+
+            /* Hybrid Analysis */
+            renderHA(engines.hybrid_analysis || {});
+
+            /* AlienVault OTX */
+            renderOTX(engines.otx || {});
+
+            /* Detection flags */
+            const flags = d.flags || [];
+            if (flags.length > 0) {
+                document.getElementById("flagsList").innerHTML = flags.map(f =>
+                    `<div class="flag-item">⚠️ ${esc(f)}</div>`).join("");
+            }
+
+            /* YARA */
+            const yaraMatches = (engines.yara || {}).matches || [];
+            if (yaraMatches.length > 0) {
+                show("yaraCard");
+                document.getElementById("yaraMatches").innerHTML = yaraMatches.map(m =>
+                    `<div class="yara-match yara-${m.severity}">
+                <strong>${esc(m.rule)}</strong>
+                <span class="yara-sev ${m.severity}">${m.severity.toUpperCase()}</span>
+                <p>${esc(m.description)}</p>
+            </div>`).join("");
+            }
+        }
+
+        /* ── VirusTotal Table ── */
+        function renderVTTable(vt) {
+            show("vtCard");
+            document.getElementById("vtStats").innerHTML = `
+        <span class="vt-stat malicious">🔴 ${vt.malicious} Malicious</span>
+        <span class="vt-stat suspicious">🟠 ${vt.suspicious} Suspicious</span>
+        <span class="vt-stat undetected">🟢 ${vt.undetected} Undetected</span>
+        <span class="vt-stat total">📊 ${vt.total_engines} Total Engines</span>`;
+            if (vt.tags && vt.tags.length) {
+                document.getElementById("vtTags").innerHTML = vt.tags.map(t =>
+                    `<span class="vt-tag">${esc(t)}</span>`).join("");
+            }
+            allVendorRows = vt.vendor_table;
+            renderVTRows(allVendorRows);
+        }
+
+        function renderVTRows(rows) {
+            const tbody = document.getElementById("vtTableBody");
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#666;padding:20px">No vendors match</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = rows.map(v => {
+                const cat = v.category || "undetected";
+                const color = CAT_COLOR[cat] || "#888";
+                const label = CAT_LABEL[cat] || cat;
+                const res = v.result ? `<span class="vt-threat-name">${esc(v.result)}</span>` : `<span style="color:#555">—</span>`;
+                return `<tr class="vt-row vt-row-${cat}">
+            <td class="vendor-name">${esc(v.vendor)}</td>
+            <td>${res}</td>
+            <td><span class="vt-badge" style="color:${color}">${label}</span></td>
+            <td style="color:#666;font-size:0.8rem">${esc(v.method || "—")}</td>
+        </tr>`;
+            }).join("");
+        }
+
+        function filterVendors(cat, btn) {
+            document.querySelectorAll(".vt-filter-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById("vtSearch").value = "";
+            renderVTRows(cat === "all" ? allVendorRows : allVendorRows.filter(r => r.category === cat));
+        }
+
+        function searchVendors(q) {
+            document.querySelectorAll(".vt-filter-btn").forEach(b => b.classList.remove("active"));
+            document.querySelector(".vt-filter-btn").classList.add("active");
+            q = q.toLowerCase();
+            renderVTRows(allVendorRows.filter(r =>
+                r.vendor.toLowerCase().includes(q) || (r.result || "").toLowerCase().includes(q)));
+        }
+
+        /* ── Hybrid Analysis ── */
+        function renderHA(ha) {
+            if (!ha || ["unavailable", "not_found", "pending"].includes(ha.status)) {
+                if (ha && ha.status === "pending") {
+                    show("haCard");
+                    document.getElementById("haCard").innerHTML += `<p style="color:#888;padding:16px;text-align:center">⏳ Sandbox analysis in progress — check back in 2-3 minutes</p>`;
+                }
+                return;
+            }
+            show("haCard");
+
+            const vc = VERDICT_COLOR[ha.verdict] || "#888";
+            document.getElementById("haVerdict").innerHTML =
+                `<span style="color:${vc};font-weight:700;font-size:0.95rem">${VERDICT_ICON[ha.verdict] || "🧪"} ${ha.verdict}</span>
+         ${ha.environment ? `<span style="color:#666;font-size:0.8rem;margin-left:10px">📦 ${esc(ha.environment)}</span>` : ""}`;
+
+    /* Network */
+    if (ha.network && ha.network.length) {
+        show("haNetworkSection");
+        document.getElementById("haNetwork").innerHTML = ha.network.map(n =>
+            `<div class="ha-item"><span class="ha-tag">${esc(n.type)}</span> ${esc(n.value)}</div>`).join("");
+    }
+
+    /* File activity */
+    if (ha.file_activity && ha.file_activity.length) {
+        show("haFilesSection");
+        document.getElementById("haFiles").innerHTML = ha.file_activity.map(f =>
+            `<div class="ha-item">📄 ${esc(f)}</div>`).join("");
+    }
+
+    /* Processes */
+    if (ha.processes && ha.processes.length) {
+        show("haProcessSection");
+        document.getElementById("haProcesses").innerHTML = ha.processes.map(p =>
+            `<div class="ha-item"><strong>${esc(p.name)}</strong>${p.command ? `<br><code class="ha-cmd">${esc(p.command)}</code>` : ""}</div>`).join("");
+    }
+
+    /* Signatures */
+    if (ha.signatures && ha.signatures.length) {
+        show("haSignaturesSection");
+        const sevColor = { high:"#ff4444", medium:"#ff8800", low:"#f0c000" };
+        document.getElementById("haSignatures").innerHTML = ha.signatures.map(s =>
+            `<div class="ha-sig" style="border-left-color:${sevColor[s.severity] || '#888'}">
+                <strong>${esc(s.name)}</strong>
+                <span class="ha-sev-badge" style="color:${sevColor[s.severity] || '#888'}">${(s.severity||"").toUpperCase()}</span>
+                ${s.description ? `<p>${esc(s.description)}</p>` : ""}
+            </div>`).join("");
+    }
+
+    /* MITRE */
+    if (ha.mitre_attcks && ha.mitre_attcks.filter(Boolean).length) {
+        show("haMitreSection");
+        document.getElementById("haMitre").innerHTML = ha.mitre_attcks.filter(Boolean).map(t =>
+            `<span class="vt-tag" style="background:rgba(255,68,68,0.1);color:#ff8888;border-color:rgba(255,68,68,0.2)">${esc(t)}</span>`).join("");
+    }
+}
+
+/* ── AlienVault OTX ── */
+function renderOTX(otx) {
+    if (!otx || ["unavailable","not_found"].includes(otx.status)) return;
+    show("otxCard");
+
+    const pc = otx.pulse_count || 0;
+    const vc = VERDICT_COLOR[otx.verdict] || "#888";
+    document.getElementById("otxStats").innerHTML = `
+        <span class="vt-stat" style="color:${vc}">${VERDICT_ICON[otx.verdict] || "🔭"} ${otx.verdict}</span>
+        <span class="vt-stat total">📡 ${pc} Pulse${pc !== 1 ? "s" : ""}</span>
+        ${otx.malware_families && otx.malware_families.length
+            ? `<span class="vt-stat suspicious">🦠 ${otx.malware_families.join(", ")}</span>` : ""}
+        ${otx.adversaries && otx.adversaries.length
+            ? `<span class="vt-stat malicious">👤 ${otx.adversaries.join(", ")}</span>` : ""}`;
+
+    /* Tags & meta */
+    let meta = "";
+    if (otx.tags && otx.tags.length) {
+        meta += `<div class="vt-tags">${otx.tags.map(t => `<span class="vt-tag">${esc(t)}</span>`).join("")}</div>`;
+    }
+    document.getElementById("otxMeta").innerHTML = meta;
+
+    /* Pulses */
+    if (otx.pulses && otx.pulses.length) {
+        show("otxPulsesSection");
+        document.getElementById("otxPulsesBody").innerHTML = otx.pulses.map(p =>
+            `<tr>
+                <td style="font-weight:500">${esc(p.name)}</td>
+                <td style="color:#888">${esc(p.author)}</td>
+                <td>${(p.tags||[]).map(t=>`<span class="vt-tag" style="font-size:0.72rem">${esc(t)}</span>`).join(" ")}</td>
+                <td style="color:#666;font-size:0.8rem">${esc(p.created)}</td>
+            </tr>`).join("");
+    }
+}
+
+/* ── Helpers ── */
+function show(id) { document.getElementById(id).style.display = "block"; }
+function fmtSize(b) {
+    if (!b) return "—";
+    if (b < 1024) return b + " B";
+    if (b < 1024*1024) return (b/1024).toFixed(1) + " KB";
+    return (b/(1024*1024)).toFixed(2) + " MB";
+}
+function esc(s) {
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+    </script>
+</body>
+
+</html>

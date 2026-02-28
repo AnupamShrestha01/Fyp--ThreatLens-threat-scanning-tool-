@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ThreatLens Dashboard</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- JS -->
+    <script defer src="../js/scan.js"></script>
+
+    <!-- 🔐 AUTH PROTECTION -->
+    <script>
+        if (!sessionStorage.getItem("uid")) {
+            window.location.href = "login.html";
+        }
+    </script>
+</head>
+
+<body class="dark">
+
+    <!-- ================= HEADER ================= -->
+    <header class="header">
+        <div class="brand">
+            <img src="../assets/logo.png" class="logo">
+            <div class="brand-text">
+                <h1>ThreatLens</h1>
+                <span>One lens. Total threat visibility.</span>
+            </div>
+        </div>
+
+        <!-- HEADER ACTIONS -->
+        <div class="header-actions">
+            <button id="themeToggle" title="Toggle Theme">☀️</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <div class="layout">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside class="sidebar">
+            <div class="profile">
+                <div class="avatar">👤</div>
+                <p id="username">User</p>
+            </div>
+
+            <nav>
+                <a href="index.html">Dashboard</a>
+                <a href="history.html">Scan History</a>
+                <a href="reports.html">Reports</a>
+                <a href="profile.html">Profile</a>
+                <a href="settings.html">Settings</a>
+            </nav>
+        </aside>
+
+        <!-- ================= CONTENT ================= -->
+        <main class="content">
+
+            <!-- SLOGAN -->
+            <div class="slogan">
+                <h2>See threats clearly before they see you</h2>
+                <p>Scan files, URLs, domains & hashes using multi-engine analysis</p>
+            </div>
+
+            <!-- ================= SCANS ================= -->
+            <div class="vertical-scans">
+
+                <!-- FILE SCAN -->
+                <div class="card">
+                    <h3>File Scan</h3>
+                    <input type="file" id="fileInput">
+                    <div class="scan-actions">
+                        <button class="primary-btn" onclick="scanFile()">Submit File</button>
+                    </div>
+                </div>
+
+                <!-- URL / DOMAIN / IP -->
+                <div class="card">
+                    <h3>URL / Domain / IP Scan</h3>
+                    <input type="text" id="urlInput" placeholder="Enter URL, Domain or IP address">
+                    <div class="scan-actions">
+                        <button class="primary-btn" onclick="scanURL()">Search</button>
+                    </div>
+                </div>
+
+                <!-- FILE HASH -->
+                <div class="card">
+                    <h3>File Hash Scan</h3>
+                    <input type="text" id="hashInput" placeholder="Enter MD5 / SHA1 / SHA256">
+                    <div class="scan-actions">
+                        <button class="primary-btn" onclick="scanHash()">Search</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script>
+        /* USERNAME */
+        document.getElementById("username").innerText =
+            sessionStorage.getItem("userName") || "User";
+
+        /* LOGOUT */
+        document.getElementById("logoutBtn").onclick = () => {
+            sessionStorage.clear();
+            location.href = "login.html";
+        };
+
+        /* THEME TOGGLE */
+        const body = document.body;
+        const toggleBtn = document.getElementById("themeToggle");
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme) {
+            body.className = savedTheme;
+            toggleBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+        }
+
+        toggleBtn.onclick = () => {
+            if (body.classList.contains("dark")) {
+                body.className = "light";
+                toggleBtn.textContent = "🌙";
+                localStorage.setItem("theme", "light");
+            } else {
+                body.className = "dark";
+                toggleBtn.textContent = "☀️";
+                localStorage.setItem("theme", "dark");
+            }
+        };
+    </script>
+
+</body>
+
+</html>

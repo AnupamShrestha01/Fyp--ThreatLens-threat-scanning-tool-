@@ -1,0 +1,7 @@
+<h2>User Profile</h2>
+<p><strong>Username:</strong> <span id="username"></span></p>
+
+<script>
+    document.getElementById("username").textContent =
+        localStorage.getItem("username") || "User";
+</script>
