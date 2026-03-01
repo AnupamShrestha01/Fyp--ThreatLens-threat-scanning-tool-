@@ -287,7 +287,16 @@
             document.getElementById("verdictIcon").textContent = VERDICT_ICON[verdict] || "❓";
             document.getElementById("verdictText").textContent = verdict;
             document.getElementById("verdictText").style.color = color;
-            document.getElementById("verdictSub").textContent = `Risk Level: ${d.risk || "Unknown"} · File: ${d.filename || "Unknown"}`;
+            const now = new Date();
+            const submitted = now.toLocaleString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById("verdictSub").textContent = `Risk Level: ${d.risk || "Unknown"} · File: ${d.filename || "Unknown"} · Submitted: ${submitted}`;
 
             /* Threat score */
             const score = d.threat_score || 0;
